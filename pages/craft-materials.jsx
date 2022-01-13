@@ -1,5 +1,5 @@
 import { Footer } from "../Components/footer";
-import { assets } from "./constants/assets";
+import { assets } from "../constants/assets";
 import Script from "next/script";
 export default function craftMaterialas() {
   function Item(asset, key) {

@@ -1,11 +1,11 @@
 //@ts-nocheck
 
 import { Footer } from "../../Components/footer";
-import { assets } from "../../pages/constants/assets.js";
+import { assets } from "../../constants/assets.js";
 import { useState, useEffect } from "react";
 import axios from "axios";
 //import {selector} from "./constants/selector"
-import { INFURA } from "./../constants/routes";
+import { INFURA } from "../../constants/routes";
 import { HextoAscii ,  addressBech32, toHex, fromHex} from "../../Cardano/Utils";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;

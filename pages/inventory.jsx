@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import {selector} from "./constants/selector"
-import {   INFURA } from "./constants/routes";
+import {selector} from "../constants/selector"
+import {   INFURA } from "../constants/routes";
 import { Footer } from "../Components/footer";
 import { HextoAscii , addressBech32 ,  fromHex } from "../Cardano/Utils";
 
