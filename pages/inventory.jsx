@@ -4,6 +4,7 @@ import {selector} from "../constants/selector"
 import {   INFURA } from "../constants/routes";
 import { Footer } from "../Components/footer";
 import { HextoAscii , addressBech32 ,  fromHex } from "../Cardano/Utils";
+import { allowedPolicies } from "../constants/allowedPolicies";
 
 
 
@@ -64,6 +65,7 @@ async function loadNFTs() {
     setLoadingState("loaded");
   } else {
 
+
     console.log(data)
    
     const data2 = await Promise.all(
@@ -77,7 +79,8 @@ async function loadNFTs() {
     let filteredMetadata_ = data2.filter(
       (x) =>
         x.data.onchain_metadata &&
-        x.data.onchain_metadata 
+        x.data.onchain_metadata.description &&
+        ['material-raw' , 'weapon'].includes(x.data.onchain_metadata.description) 
        
     );
     let filteredMetadata = filteredMetadata_.map((x) => x.data);

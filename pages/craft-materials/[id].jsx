@@ -7,24 +7,13 @@ import axios from "axios";
 //import {selector} from "./constants/selector"
 import { INFURA } from "../../constants/routes";
 import { HextoAscii ,  addressBech32, toHex, fromHex} from "../../Cardano/Utils";
+import { allowedPolicies } from "../../constants/allowedPolicies";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
 function getAssetsPaths() {
   const FilteredAssets = assets.filter((x) => x.recipe);
-  // Returns an array that looks like this:
-  // [
-  //   {
-  //     params: {
-  //       id: 'ssg-ssr'
-  //     }
-  //   },
-  //   {
-  //     params: {
-  //       id: 'pre-rendering'
-  //     }
-  //   }
-  // ]
+
   return FilteredAssets.map((x) => {
     return {
       params: {
@@ -58,11 +47,11 @@ export default function Craft({ postData }) {
   }, []);
 
   async function loadNFTs() {
-    console.log("loading NFTs");
+    //console.log("loading NFTs")
     await window.cardano.enable();
-
+  
     const address = await addressBech32();
-
+  
     const getAssets = async function () {
       // This function trows an error 404 if the address has not had any tx...  FIX!!!
       try {
@@ -70,7 +59,7 @@ export default function Craft({ postData }) {
           address: address,
         });
         const assets = response.data.amount.map((x) => x.unit);
-
+  
         return assets;
       } catch (error) {
         console.log(error.response);
@@ -81,8 +70,10 @@ export default function Craft({ postData }) {
     if (!data) {
       setLoadingState("loaded");
     } else {
-      console.log(data);
-
+  
+  
+      //console.log(data)
+     
       const data2 = await Promise.all(
         data.map(
           async (x) =>
@@ -92,17 +83,21 @@ export default function Craft({ postData }) {
         )
       );
       let filteredMetadata_ = data2.filter(
-        (x) => x.data.onchain_metadata && x.data.onchain_metadata
+        (x) =>
+          x.data.onchain_metadata &&
+          x.data.onchain_metadata.description &&
+          ['material-raw' , 'weapon'].includes(x.data.onchain_metadata.description) 
+         
       );
       let filteredMetadata = filteredMetadata_.map((x) => x.data);
-
+  
       const assets = data2.map((x) => x.data.asset);
-
-      console.log(filteredMetadata);
-
+  
+      console.log(filteredMetadata)
+      
       setNFTs(filteredMetadata);
-      setSelectedNFTs(filteredMetadata);
-
+      setSelectedNFTs(filteredMetadata)
+  
       setLoadingState("loaded");
     }
   }
