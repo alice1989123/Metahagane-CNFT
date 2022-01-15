@@ -1,6 +1,8 @@
 import { sendLovelaces } from "../Cardano/Lib";
 import { Footer } from "../Components/footer";
 export default function Home() {
+  await window.cardano.enable();
+
   return (
     <>
       <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">

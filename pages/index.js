@@ -25,7 +25,7 @@ export default function Home() {
                   Buy Cards
                 </a>
                 <a
-                  href="create-item.html"
+                  href="/buycards"
                   className="btn block bg-blueGray-900 text-white font-body font-bold rounded py-4 px-7 mx-3 mt-4 transition duration-500 hover:bg-indigo-500"
                 >
                   Start Crafting
