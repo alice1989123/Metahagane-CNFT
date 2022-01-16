@@ -1,10 +1,20 @@
 import { sendLovelaces } from "../Cardano/Lib";
 import { Footer } from "../Components/footer";
-export default function Home() {
-  await window.cardano.enable();
+import ConfirmationModal from "../Components/confirmationModal"
+import { useState } from "react";
 
-  return (
+
+
+
+export default function BuyCards() {
+
+	const [showModal, setShowModal] = useState(false);
+
+  return(
+
     <>
+      <ConfirmationModal showModal={showModal} setShowModal={setShowModal} title={'Transaction succesfull'} description={"We will send your Cards to your Wallet, this proccess usually takes less than 5 minutes."}/>
+
       <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">
         <div className="container mx-auto relative px-4 z-10">
           <h2 className="font-display text-4xl lg:text-6xl text-blueGray-900 font-bold mb-4">
@@ -60,7 +70,11 @@ export default function Home() {
                   />
                 </div>
                 <button
-                  onClick={() => sendLovelaces("7000000")}
+                  onClick={async () => {const hash= await sendLovelaces("7000000");
+                  if(hash){setShowModal(hash)}
+                
+                }
+                }
                   className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
                 >
                   <img
@@ -162,7 +176,11 @@ export default function Home() {
                   />
                 </div>
                 <button
-                  onClick={() => sendLovelaces("14000000")}
+                  onClick={async () => {const hash= await sendLovelaces("14000000");
+                  if(hash){setShowModal(hash)}
+                
+                }
+                }
                   className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
                 >
                   <img
@@ -264,7 +282,11 @@ export default function Home() {
                   />
                 </div>
                 <button
-                  onClick={() => sendLovelaces("21000000")}
+                  onClick={async () => {const hash= await sendLovelaces("21000000");
+                  if(hash){setShowModal(hash)}
+                
+                }
+                }
                   className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
                 >
                   <img
@@ -366,7 +388,11 @@ export default function Home() {
                   />
                 </div>
                 <button
-                  onClick={() => sendLovelaces("35000000")}
+                  onClick={async () => {const hash= await sendLovelaces("35000000");
+                  if(hash){setShowModal(hash)}
+                
+                }
+                }
                   className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
                 >
                   <img
