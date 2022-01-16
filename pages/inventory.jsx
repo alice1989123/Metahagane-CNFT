@@ -41,7 +41,7 @@ useEffect(() => {
 
 
 async function loadNFTs() {
-  console.log("loading NFTs")
+  //console.log("loading NFTs")
   await window.cardano.enable();
 
   const address = await addressBech32();
@@ -66,7 +66,7 @@ async function loadNFTs() {
   } else {
 
 
-    console.log(data)
+    //console.log(data)
    
     const data2 = await Promise.all(
       data.map(
