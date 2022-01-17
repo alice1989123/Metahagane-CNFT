@@ -1,7 +1,7 @@
 import { sendLovelaces } from "../Cardano/Lib";
 import { Footer } from "../Components/footer";
 import ConfirmationModal from "../Components/confirmationModal"
-import { useState } from "react";
+import { useState ,  useEffect } from "react";
 
 
 
@@ -9,6 +9,12 @@ import { useState } from "react";
 export default function BuyCards() {
 
 	const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    loadCardano();
+  }, []);
+
+  async function loadCardano(){ if(window.cardano){await window.cardano.enable()}}
 
   return(
 

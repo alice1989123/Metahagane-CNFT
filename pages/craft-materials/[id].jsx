@@ -1,15 +1,14 @@
 //@ts-nocheck
 
-import { Footer } from "../../Components/footer";
 import { assets } from "../../constants/assets.js";
 import { useState, useEffect } from "react";
 import axios from "axios";
-//import {selector} from "./constants/selector"
 import { INFURA } from "../../constants/routes";
-import { HextoAscii ,  addressBech32, toHex, fromHex} from "../../Cardano/Utils";
-import { allowedPolicies } from "../../constants/allowedPolicies";
+import {   addressBech32,  fromHex} from "../../Cardano/Utils";
 import { materials } from "../../constants/assets.js";
 import {forgeWeapon} from "../api/server"
+import ConfirmationModal from "../../Components/confirmationModal"
+
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
@@ -44,6 +43,8 @@ export default function Craft({ postData }) {
   const [NFTs, setNFTs] = useState([]);
   const [loadingState, setLoadingState] = useState("not-loaded");
   const [isRecipeComplete, setIsRecipeComplete] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
 
 
   useEffect(() => {
@@ -56,7 +57,8 @@ export default function Craft({ postData }) {
 
   async function loadNFTs() {
     //console.log("loading NFTs")
-    await window.cardano.enable();
+    if (window.cardano){
+    await window.cardano.enable()};
   
     const address = await addressBech32();
   
@@ -186,75 +188,80 @@ const isRecipeComplete_ = function ( assetsToBurn) {
     );
   };
 
-  return (<section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32 ">
-    <div className=" flex flex-row px-4 z-10  min-h-[46rem]">
-      <div className=" basis-1/3 transition duration-500 hover:shadow-sm rounded p-5">
-        <div className="container  max-h-96	 relative px-4 z-10">
-          <div>
-            <h2 className="text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6 ">
-              Inventory
-            </h2>
-          </div>
-          <div className="grid  grid-cols-3 overflow-y-auto max-h-[36rem]				">
-            {selectedNFTs.map((NFT, key) => (
-              <NFTWrapper nft={NFT} key={key}></NFTWrapper>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="   transition duration-500 hover:shadow-sm rounded p-5">
-        <div className="container flex mx-auto relative pt-6 px-4 mb-4 z-10">
-          <div className="container flex justify-center	">
-            <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold ">
-              {asset.label}
-            </h2>
-          </div>
-          <div className="container flex justify-center	">
-            <img
-              className="transition duration-500 hover:scale-125 relative rounded overflow-hidden m-6 mb-8 w-60 h-75 rounded object-cover"
-              src={asset.src}
-              alt="title" />
+  return (
+    <>
+    <ConfirmationModal showModal={showModal} setShowModal={setShowModal} title={'Transaction succesfull'} description={"Your Item will be available in your inventory in a few minutes."}/>
+    <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32 ">
+      <div className=" flex flex-row px-4 z-10  min-h-[46rem]">
+        <div className=" basis-1/3 transition duration-500 hover:shadow-sm rounded p-5">
+          <div className="container  max-h-96	 relative px-4 z-10">
+            <div>
+              <h2 className="text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6 ">
+                Inventory
+              </h2>
+            </div>
+            <div className="grid  grid-cols-3 overflow-y-auto max-h-[36rem]				">
+              {selectedNFTs.map((NFT, key) => (
+                <NFTWrapper nft={NFT} key={key}></NFTWrapper>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center mt-4"></div>
-          <div className="text-center mt-4">
-            <button onClick={async() => {const confirmation = await forgeWeapon(
-                  assetsToBurn ,
+        <div className="   transition duration-500 hover:shadow-sm rounded p-5">
+          <div className="container flex mx-auto relative pt-6 px-4 mb-4 z-10">
+            <div className="container flex justify-center	">
+              <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold ">
+                {asset.label}
+              </h2>
+            </div>
+            <div className="container flex justify-center	">
+              <img
+                className="transition duration-500 hover:scale-125 relative rounded overflow-hidden m-6 mb-8 w-60 h-75 rounded object-cover"
+                src={asset.src}
+                alt="title" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center mt-4"></div>
+            <div className="text-center mt-4">
+              <button onClick={async () => {
+                const hash = await forgeWeapon(
+                  assetsToBurn,
                   asset
-                );}} className={`flex flex-col items-stretch  bg-green-100 transition hover:bg-indigo-100 rounded-lg w-44 h-50 mx-auto mb-1 ${isRecipeComplete ? null : "cursor-not-allowed"}`}>
-              <img className="w-30" src="/anvil.png" alt="title" />
-              <div className="font-display text-xl text-blueGray-900 font-bold">
-                Forge
-              </div>
-            </button>
+                );               
+                if(hash){setShowModal(hash)}} } className={`flex flex-col items-stretch  bg-green-100 transition hover:bg-indigo-100 rounded-lg w-44 h-50 mx-auto mb-1 ${isRecipeComplete ? null : "cursor-not-allowed"}`}>
+                <img className="w-30" src="/anvil.png" alt="title" />
+                <div className="font-display text-xl text-blueGray-900 font-bold">
+                  Forge
+                </div>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="  transition duration-500 hover:shadow-sm rounded p-5">
-        <div className="container mx-auto relative px-4 z-10">
-          <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6">
-            Recipe Ingredients
-          </h2>
-          <div className="grid grid-cols-4 gap-2 ">
-            <div className="thumbnail grid gap-4 items-center grid-cols-2 col-span-7 md:col-span-4  h-200">
-              {asset.recipe.map(function (x, i) {
-                return Array.from(Array(x).keys()).map((y) => (
-                  <div className="flex justify-center	" key={i}>
-                    <img
-                      className="transition duration-500 hover:scale-125 relative rounded overflow-hidden m-6 mb-8 w-20 h-25 rounded object-cover"
-                      src={assets[i].src}
-                      alt="title"
-                      key={i} />
-                  </div>
-                ));
-              })}
+        <div className="  transition duration-500 hover:shadow-sm rounded p-5">
+          <div className="container mx-auto relative px-4 z-10">
+            <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6">
+              Recipe Ingredients
+            </h2>
+            <div className="grid grid-cols-4 gap-2 ">
+              <div className="thumbnail grid gap-4 items-center grid-cols-2 col-span-7 md:col-span-4  h-200">
+                {asset.recipe.map(function (x, i) {
+                  return Array.from(Array(x).keys()).map((y) => (
+                    <div className="flex justify-center	" key={i}>
+                      <img
+                        className="transition duration-500 hover:scale-125 relative rounded overflow-hidden m-6 mb-8 w-20 h-25 rounded object-cover"
+                        src={assets[i].src}
+                        alt="title"
+                        key={i} />
+                    </div>
+                  ));
+                })}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section></>
   );
 }
 
