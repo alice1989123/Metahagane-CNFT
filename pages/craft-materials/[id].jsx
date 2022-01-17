@@ -145,11 +145,16 @@ const isRecipeComplete_ = function ( assetsToBurn) {
   
 };
   const NFTWrapper = function ({ nft, key }) {
-    function selectedcardsClassName( nft , assetsToBurn ){
-      function color(){ return isRecipeComplete ? 'lime' : 'rose'}
+    function selectedcardsClassName1( nft , assetsToBurn ){
       if (assetsToBurn && assetsToBurn.includes(nft))
       {
-      return `border-4 border-${color()}-600`}
+      return `border-4 border-red-600`}
+    else return null}
+
+    function selectedcardsClassName2( nft , assetsToBurn ){
+      if (assetsToBurn && assetsToBurn.includes(nft))
+      {
+      return `border-4 border-lime-600`}
     else return null}
 
     return (
@@ -163,17 +168,17 @@ const isRecipeComplete_ = function ( assetsToBurn) {
     if(assetsToBurn.includes(nft)){ const index = 
       setAssetstoButn(assetsToBurn.filter(x =>  x!== (nft)))}
   console.log(assetsToBurn)}}
-        key={key}
+        key={`${key} container`}
         className="transition duration-500 hover:scale-125 relative rounded overflow-hidden m-6 mb-8"
       >
         <img 
-          className= {`w-20 h-25  sm:h-90 rounded object-cover ${selectedcardsClassName(nft , assetsToBurn) }`}
+          className= {isRecipeComplete  ? `w-20 h-25  sm:h-90 rounded object-cover ${selectedcardsClassName2(nft , assetsToBurn) }` :`w-20 h-25  sm:h-90 rounded object-cover ${selectedcardsClassName1(nft , assetsToBurn) }`}
           src={
             nft.onchain_metadata.image &&
             `${INFURA}${nft.onchain_metadata.image.replace("ipfs://", "ipfs/")}`
           }
           alt="title"
-          key={key}
+          key={`${key}card-image`}
         />
       </div>
       /* </div>

@@ -20,18 +20,12 @@ export default function Home() {
                 Metaverse.
               </p>
               <div className="flex flex-wrap items-center justify-center">
-                <Link
-                  href="explore.html"
-                  className="btn block text-white font-body font-bold rounded py-4 px-7 mx-3 mt-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
-                >
-                  Buy Cards
-                </Link>
-                <Link
-                  href="/buycards"
-                  className="btn block bg-blueGray-900 text-white font-body font-bold rounded py-4 px-7 mx-3 mt-4 transition duration-500 hover:bg-indigo-500"
-                >
-                  Start Crafting
-                </Link>
+                <div className="btn block text-white font-body font-bold rounded py-4 px-7 mx-3 mt-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100">
+                  <Link href="explore.html">Buy Cards</Link>
+                </div>
+                <div className="btn block bg-blueGray-900 text-white font-body font-bold rounded py-4 px-7 mx-3 mt-4 transition duration-500 hover:bg-indigo-500">
+                  <Link href="/buycards">Start Crafting</Link>
+                </div>
               </div>
             </div>
           </div>
