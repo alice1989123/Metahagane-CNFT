@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-
+import { materials } from "../../constants/assets";
 import axios from "axios";
-//import { addressBech32, signTx_, submitTx } from "./wallet";
+import { addressBech32, signTx_, submitTx } from "../../Cardano/Wallet";
 //import { sendLovelacestoAddres } from "./wallet";
 
 const serverApi = process.env.NEXT_PUBLIC_SERVER_API;
@@ -54,27 +54,35 @@ export async function buyCards(buyOption) {
     return [txHash, "TX-HASH", response];
   }
 }
-
+*/
 export async function forgeWeapon(tokensToBurn, nFTtoForge) {
   const address = await addressBech32();
   const balance = await window.cardano.getBalance();
   const utxos = await window.cardano.getUtxos();
 
+  let tokensToBurn_ = [];
+
+  tokensToBurn.forEach((x) => {
+    const token = { unit: x.asset, quantity: "1" };
+    tokensToBurn_.push(token);
+  });
+
+  console.log(tokensToBurn_, nFTtoForge);
   const response = await axios.post(`${serverApi}${apiEndPoints.forgeWeapon}`, {
     address: address,
     balance: balance,
     utxos: utxos,
-    tokensToBurn: tokensToBurn,
+    tokensToBurn: tokensToBurn_,
     nFTtoForge: nFTtoForge,
   });
-  console.log(tokensToBurn);
+  console.log(response);
   const signedTx = await signTx_(response.data);
   const txHash = await submitTx(signedTx);
 
   console.log(`transaction submited with txHash ${txHash}`);
   return txHash;
 }
- */
+
 export async function getParams() {
   const params = await axios.get(`${serverApi}${apiEndPoints.parameters}`);
 
