@@ -2,6 +2,9 @@ import { Footer } from "../Components/footer";
 import { assets } from "../constants/assets";
 import Script from "next/script";
 export default function craftMaterialas() {
+
+
+
   function Item(asset, key) {
     const asset_ = JSON.parse(asset.asset);
     console.log(asset_);
@@ -103,9 +106,9 @@ export default function craftMaterialas() {
 
   return (
     <>
-      <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">
-        <div className="container mx-auto relative px-4 z-10">
-          <h2 className="font-display text-4xl lg:text-6xl text-blueGray-900 font-bold mb-4">
+      <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32 ">
+        <div className="container mx-auto relative px-4 z-10 " >
+          <h2 className="font-display text-4xl lg:text-6xl text-blueGray-900 font-bold mb-4 ">
             Craft Materials{" "}
           </h2>
           <ul className="hero-breadcrumb font-body text-blueGray-600 flex flex-wrap items-center">
