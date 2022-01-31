@@ -88,7 +88,6 @@ export async function getParams() {
 
   return params.data;
 }
-/* 
 export async function getAssets(address) {
   // This function trows an error 404 if the address has not had any tx...  FIX!!!
   try {
@@ -151,7 +150,7 @@ export async function getUtxos(address) {
     console.log(error);
     return null;
   }
-} */
+}
 
 const apiEndPoints = {
   burningTokens: "",

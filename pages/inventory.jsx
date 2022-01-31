@@ -4,9 +4,9 @@ import { selector } from "../constants/selector";
 import { INFURA } from "../constants/routes";
 import { Footer } from "../Components/footer";
 import { HextoAscii, addressBech32, fromHex } from "../Cardano/Utils";
-import buyModal from "../Components/BuyModal";
 import BuyModal from "../Components/BuyModal";
 import { getNiceName } from "../Cardano/Utils";
+import ConfirmationModal from "../Components/confirmationModal";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
@@ -142,6 +142,7 @@ export default function Inventory({
           <button
             onClick={() => {
               setAssetToSell(nft);
+              console.log(assetToSell);
             }}
             className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
           >

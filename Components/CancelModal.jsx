@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { INFURA } from "../constants/routes";
 import { getNiceName, HextoAscii, addressBech32 } from "../Cardano/Utils";
-import React, { Fragment } from "react";
-import { useForm } from "react-hook-form";
-import { sell } from "../Cardano/Wallet";
-import { getAssets, registerSell } from "../pages/api/server";
+import React from "react";
+import { CancelSell } from "../Cardano/Wallet";
 import ConfirmationModal from "./confirmationModal";
 
-export default function BuyModal({ showModal, setShowModal, address }) {
+export default function CancelModal({ showModal, setShowModal, address }) {
   const [showModal_, setShowModal_] = useState(false);
   return (
     <>
@@ -25,8 +23,8 @@ export default function BuyModal({ showModal, setShowModal, address }) {
                       <img
                         className="sm:h-90 rounded object-cover mr-2"
                         src={
-                          showModal.onchain_metadata.image &&
-                          `${INFURA}${showModal.onchain_metadata.image.replace(
+                          showModal.aditionalInfo.onchain_metadata.image &&
+                          `${INFURA}${showModal.aditionalInfo.onchain_metadata.image.replace(
                             "ipfs://",
                             "ipfs/"
                           )}`
@@ -41,7 +39,9 @@ export default function BuyModal({ showModal, setShowModal, address }) {
                       >
                         <div className={"col-span-5	m-4 text-4xl"}>
                           {" "}
-                          {getNiceName(HextoAscii(showModal.asset_name))}{" "}
+                          {getNiceName(
+                            HextoAscii(showModal.aditionalInfo.asset_name)
+                          )}{" "}
                         </div>
                         <div className={"text-xl col-span-1  	"}>
                           {" "}
@@ -54,7 +54,7 @@ export default function BuyModal({ showModal, setShowModal, address }) {
                           }
                         >
                           {" "}
-                          {showModal.asset}{" "}
+                          {showModal.aditionalInfo.asset}{" "}
                         </div>
 
                         <div className={"text-xl col-span-1 "}>
@@ -64,7 +64,7 @@ export default function BuyModal({ showModal, setShowModal, address }) {
 
                         <div className={"text-md col-span-4"}>
                           {" "}
-                          {showModal.policy_id}{" "}
+                          {showModal.aditionalInfo.policy_id}{" "}
                         </div>
                         <div className={"text-xl col-span-1 "}>
                           {" "}
@@ -73,7 +73,7 @@ export default function BuyModal({ showModal, setShowModal, address }) {
 
                         <div className={"text-md col-span-4"}>
                           {" "}
-                          {showModal.asset_name}{" "}
+                          {showModal.aditionalInfo.asset_name}{" "}
                         </div>
                         <div className={"text-xl col-span-1 "}>
                           {" "}
@@ -82,7 +82,7 @@ export default function BuyModal({ showModal, setShowModal, address }) {
 
                         <div className={"text-md col-span-4"}>
                           {" "}
-                          {showModal.fingerprint}{" "}
+                          {showModal.aditionalInfo.fingerprint}{" "}
                         </div>
                         <div className={"text-xl col-span-1 "}>
                           {" "}
@@ -91,7 +91,7 @@ export default function BuyModal({ showModal, setShowModal, address }) {
 
                         <div className={"text-md col-span-4"}>
                           {" "}
-                          {showModal.quantity}{" "}
+                          {showModal.aditionalInfo.quantity}{" "}
                         </div>
                         <div className={"text-xl col-span-1 "}>
                           {" "}
@@ -100,7 +100,14 @@ export default function BuyModal({ showModal, setShowModal, address }) {
 
                         <div className={"text-md col-span-4"}>
                           {" "}
-                          {showModal.mint_or_burn_count}{" "}
+                          {showModal.aditionalInfo.mint_or_burn_count}{" "}
+                        </div>
+                        <div className={"text-xl col-span-1 "}> {"Price"} </div>
+
+                        <div className={"text-md col-span-4"}>
+                          {" "}
+                          {showModal.price.price}
+                          {" ADA "}
                         </div>
                       </div>
                     </div>
@@ -108,17 +115,30 @@ export default function BuyModal({ showModal, setShowModal, address }) {
                 </div>
               </div>
 
-              <div className="flex justify-between	     m-2">
-                <div>
-                  <HookForm
-                    showModal={showModal}
-                    registerSell={registerSell}
-                    address={address}
-                    setShowModal={setShowModal}
-                    setShowModal_={setShowModal_}
-                  />
+              <div className="flex justify-center	     m-2">
+                <div className="   flex justify-between m-2 ">
+                  <button
+                    className="  text-white text-center font-body font-medium rounded h-12 py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
+                    onClick={async () => {
+                      console.log(showModal);
+                      const sellingData = {
+                        unit: showModal.unit,
+                        quantity: showModal.quantity,
+                        price: showModal.price.price,
+                      };
+
+                      const hash = await CancelSell(sellingData);
+                      if (hash) {
+                        setShowModal_(hash);
+                        setShowModal(false);
+                      }
+                    }}
+                  >
+                    {" "}
+                    Cancel Sale{" "}
+                  </button>
                 </div>
-                <div className="flex flex-col justify-end">
+                <div className="flex flex-col justify-end m-2">
                   <button
                     onClick={() => setShowModal(false)}
                     className="  text-white text-center font-body font-medium rounded h-12 py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
@@ -134,56 +154,3 @@ export default function BuyModal({ showModal, setShowModal, address }) {
     </>
   );
 }
-
-const HookForm = ({ showModal, setShowModal, address, setShowModal_ }) => {
-  const { register, errors, handleSubmit } = useForm();
-
-  const onSubmit = async (price) => {
-    const address = await addressBech32();
-    if (address) {
-      const sellingData = {
-        unit: showModal.asset,
-        quantity: showModal.quantity,
-      };
-      console.log(showModal);
-      console.log(price.price);
-
-      const hash = await sell(sellingData, price.price * 1000000);
-      if (hash) {
-        registerSell(showModal.asset, price, address);
-        setShowModal_(hash);
-        setShowModal(false);
-      }
-    }
-  };
-
-  return (
-    <Fragment>
-      <h2>Listing Price</h2>
-      <form className="flex" onSubmit={handleSubmit(onSubmit)}>
-        <input
-          placeholder="Select a price for sale"
-          className="form-control m-2"
-          name="usuario"
-          {...register("price", {
-            required: true,
-            message: "price is required",
-          })}
-        ></input>
-        <button
-          type="submit"
-          className={
-            " m-2 flex-no-shrink text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
-          }
-        >
-          <img
-            className="w-4 h-4 inline-block mb-1"
-            src="assets/images/bid-icon2.svg"
-            alt="title"
-          />
-          Sell Item
-        </button>
-      </form>
-    </Fragment>
-  );
-};
