@@ -1,5 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
+import React from "react";
+
+/* import { Redirect } from "react-router-dom";
+
+const ProtectedComponent = () => {
+  if (authFails)
+    return <Redirect to='/login'  />
+  }
+  return <div> My Protected Component </div>
+} */
 
 export default function Navigation() {
   return (
@@ -66,10 +76,17 @@ export default function Navigation() {
                   />
                 </div>
               </form>
-              <a
-                href="wallet.html"
+              <button
+                onClick={async () => {
+                  const isCardano = await window.cardano;
+                  console.log(isCardano);
+                  if (isCardano) {
+                    await window.cardano.enable();
+                  } else {
+                    window.open("https://namiwallet.io/", "_blank");
+                  }
+                }}
                 className="btn hidden xl:flex items-center text-white font-body font-semibold rounded h-14 p-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
-                type="submit"
               >
                 <img
                   className="w-4 h-4 flex-shrink-0  mr-2"
@@ -77,7 +94,7 @@ export default function Navigation() {
                   title="title"
                 />
                 Connect Wallet
-              </a>
+              </button>
             </div>
             <button className="bg-blueGray-50 mobile-toggle block lg:hidden">
               <span className="bg-blueGray-600"></span>

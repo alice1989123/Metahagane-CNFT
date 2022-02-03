@@ -3,10 +3,16 @@ import axios from "axios";
 import { selector } from "../constants/selector";
 import { INFURA } from "../constants/routes";
 import { Footer } from "../Components/footer";
-import { HextoAscii, addressBech32, fromHex } from "../Cardano/Utils";
+import {
+  HextoAscii,
+  addressBech32,
+  fromHex,
+  loadCardano,
+} from "../Cardano/Utils";
 import BuyModal from "../Components/BuyModal";
 import { getNiceName } from "../Cardano/Utils";
 import ConfirmationModal from "../Components/confirmationModal";
+import CardanoModal from "../Components/CardanoModal";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
@@ -50,14 +56,19 @@ export default function Inventory({
   const [NFTs, setNFTs] = useState([]);
   const [loadingState, setLoadingState] = useState("not-loaded");
   const [assetToSell, setAssetToSell] = useState(null);
+  const [isCardano, setIsCardano] = useState(true);
+
+  useEffect(async () => {
+    await loadCardano(setIsCardano);
+    await loadNFTs();
+  }, []);
 
   useEffect(() => {
     loadNFTs();
-  }, []);
+  }, [isCardano]);
 
   async function loadNFTs() {
     //console.log("loading NFTs")
-    await window.cardano.enable();
 
     const address = await addressBech32();
 
@@ -244,11 +255,12 @@ export default function Inventory({
 
   return (
     <>
+      <CardanoModal showModal={!isCardano} />
       <BuyModal showModal={assetToSell} setShowModal={setAssetToSell} />
       <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">
         <div className="container mx-auto relative px-4 z-10">
           <h2 className="font-display text-4xl lg:text-6xl text-blueGray-900 font-bold mb-4">
-            Inventory{" "}
+            Inventory
           </h2>
           <ul className="hero-breadcrumb font-body text-blueGray-600 flex flex-wrap items-center">
             <li className="flex items-center mr-2">
@@ -284,7 +296,7 @@ export default function Inventory({
             </li>
           </ul>
         </div>
-      </section>{" "}
+      </section>
       <section className="product-section relative mb-20 lg:mb-32">
         <div className="container mx-auto relative px-4 z-10">
           <div className="flex justify-between mb-8 lg:mb-14">

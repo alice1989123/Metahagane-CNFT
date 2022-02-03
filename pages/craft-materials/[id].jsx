@@ -4,11 +4,11 @@ import { assets } from "../../constants/assets.js";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { INFURA } from "../../constants/routes";
-import {   addressBech32,  fromHex} from "../../Cardano/Utils";
+import { addressBech32, fromHex, loadCardano } from "../../Cardano/Utils";
 import { materials } from "../../constants/assets.js";
-import {forgeWeapon} from "../api/server"
-import ConfirmationModal from "../../Components/confirmationModal"
-
+import { forgeWeapon } from "../api/server";
+import ConfirmationModal from "../../Components/confirmationModal";
+import CardanoModal from "../../Components/CardanoModal.jsx";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
@@ -34,33 +34,36 @@ export function getPostData(id) {
   };
 }
 
-
 export default function Craft({ postData }) {
-
-
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [assetsToBurn, setAssetstoButn] = useState([]);
   const [NFTs, setNFTs] = useState([]);
   const [loadingState, setLoadingState] = useState("not-loaded");
   const [isRecipeComplete, setIsRecipeComplete] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isCardano, setIsCardano] = useState(true);
 
-
+  useEffect(async () => {
+    await loadCardano(setIsCardano);
+    await loadNFTs();
+  }, []);
 
   useEffect(() => {
     loadNFTs();
-  }, []);
+  }, [isCardano]);
+
   useEffect(() => {
-    setIsRecipeComplete(isRecipeComplete_(assetsToBurn )) ; console.log(isRecipeComplete),
-      [ assetsToBurn];
-  })
+    setIsRecipeComplete(isRecipeComplete_(assetsToBurn));
+    console.log(isRecipeComplete), [assetsToBurn];
+  });
 
   async function loadNFTs() {
-    if (window.cardano){
-    await window.cardano.enable()};
-  
+    if (window.cardano) {
+      await window.cardano.enable();
+    }
+
     const address = await addressBech32();
-  
+
     const getAssets = async function () {
       // This function trows an error 404 if the address has not had any tx...  FIX!!!
       try {
@@ -68,7 +71,7 @@ export default function Craft({ postData }) {
           address: address,
         });
         const assets = response.data.amount.map((x) => x.unit);
-  
+
         return assets;
       } catch (error) {
         console.log(error.response);
@@ -79,10 +82,8 @@ export default function Craft({ postData }) {
     if (!data) {
       setLoadingState("loaded");
     } else {
-  
-  
       //console.log(data)
-     
+
       const data2 = await Promise.all(
         data.map(
           async (x) =>
@@ -95,18 +96,19 @@ export default function Craft({ postData }) {
         (x) =>
           x.data.onchain_metadata &&
           x.data.onchain_metadata.description &&
-          ['material-raw' , 'weapon'].includes(x.data.onchain_metadata.description) 
-         
+          ["material-raw", "weapon"].includes(
+            x.data.onchain_metadata.description
+          )
       );
       let filteredMetadata = filteredMetadata_.map((x) => x.data);
-  
+
       const assets = data2.map((x) => x.data.asset);
-  
-      console.log(filteredMetadata)
-      
+
+      console.log(filteredMetadata);
+
       setNFTs(filteredMetadata);
-      setSelectedNFTs(filteredMetadata)
-  
+      setSelectedNFTs(filteredMetadata);
+
       setLoadingState("loaded");
     }
   }
@@ -114,23 +116,22 @@ export default function Craft({ postData }) {
   console.log(postData);
   console.log(asset);
 
+  const isRecipeComplete_ = function (assetsToBurn) {
+    function materialCounter(assetsToBurn, material) {
+      if (assetsToBurn) {
+        console.log(assetsToBurn);
 
-const isRecipeComplete_ = function ( assetsToBurn) {
-  function materialCounter(assetsToBurn, material) {
-    if (assetsToBurn) {
-      console.log(assetsToBurn)
-      
-      const filteredAssets = assetsToBurn.filter(
-        (x) =>
-          fromHex(x.asset.slice(56)).toString().replace(/\d+/g, "") ==
-          material.value
-      );
-      return filteredAssets.length;
-    } else {
-      return 0;
+        const filteredAssets = assetsToBurn.filter(
+          (x) =>
+            fromHex(x.asset.slice(56)).toString().replace(/\d+/g, "") ==
+            material.value
+        );
+        return filteredAssets.length;
+      } else {
+        return 0;
+      }
     }
-  }
-  
+
     const selectedRecipeData = asset.recipe;
     // const selectedAssetsData = []
     //console.log(selectedRecipeData);
@@ -139,42 +140,53 @@ const isRecipeComplete_ = function ( assetsToBurn) {
       const count = materialCounter(assetsToBurn, material);
       selectedAssetData.push(count);
     });
-    console.log(selectedAssetData , selectedRecipeData)
+    console.log(selectedAssetData, selectedRecipeData);
     return (
       JSON.stringify(selectedRecipeData) == JSON.stringify(selectedAssetData)
     );
-  
-};
-  const NFTWrapper = function ({nft , index}) {
-
-    const borderWidth = "border-4 md:2 sm:1"
+  };
+  const NFTWrapper = function ({ nft, index }) {
+    const borderWidth = "border-4 md:2 sm:1";
     //console.log(index)
 
+    function selectedcardsClassName1(nft, assetsToBurn) {
+      if (assetsToBurn && assetsToBurn.includes(nft)) {
+        return ` ${borderWidth}  border-red-600`;
+      } else return null;
+    }
 
-    function selectedcardsClassName1( nft , assetsToBurn ){
-      if (assetsToBurn && assetsToBurn.includes(nft))
-      {
-      return ` ${borderWidth}  border-red-600`}
-    else return null}
-
-    function selectedcardsClassName2( nft , assetsToBurn ){
-      if (assetsToBurn && assetsToBurn.includes(nft))
-      {
-      return `${borderWidth} border-lime-600`}
-    else return null}
+    function selectedcardsClassName2(nft, assetsToBurn) {
+      if (assetsToBurn && assetsToBurn.includes(nft)) {
+        return `${borderWidth} border-lime-600`;
+      } else return null;
+    }
 
     return (
-  
-      <div  onClick={() => {
-    if(!assetsToBurn.includes(nft)){setAssetstoButn([ nft, ... assetsToBurn])}
-    if(assetsToBurn.includes(nft)){
-      setAssetstoButn(assetsToBurn.filter(x =>  x!== (nft)))}
-  console.log(nft.asset , index)}}
+      <div
+        onClick={() => {
+          if (!assetsToBurn.includes(nft)) {
+            setAssetstoButn([nft, ...assetsToBurn]);
+          }
+          if (assetsToBurn.includes(nft)) {
+            setAssetstoButn(assetsToBurn.filter((x) => x !== nft));
+          }
+          console.log(nft.asset, index);
+        }}
         id={`${index} ${nft.asset}`}
         className="transition duration-500 hover:scale-110 relative rounded overflow-hidden m-1"
       >
-        <img 
-          className= {isRecipeComplete  ? `  sm:h-90 rounded object-cover ${borderWidth} ${selectedcardsClassName2(nft , assetsToBurn) }` :`  sm:h-90 rounded object-cover ${borderWidth}  ${selectedcardsClassName1(nft , assetsToBurn) }`}
+        <img
+          className={
+            isRecipeComplete
+              ? `  sm:h-90 rounded object-cover ${borderWidth} ${selectedcardsClassName2(
+                  nft,
+                  assetsToBurn
+                )}`
+              : `  sm:h-90 rounded object-cover ${borderWidth}  ${selectedcardsClassName1(
+                  nft,
+                  assetsToBurn
+                )}`
+          }
           src={
             nft.onchain_metadata.image &&
             `${INFURA}${nft.onchain_metadata.image.replace("ipfs://", "ipfs/")}`
@@ -183,86 +195,107 @@ const isRecipeComplete_ = function ( assetsToBurn) {
           key={`${index}card-image`}
         />
       </div>
-     
     );
   };
 
   return (
     <>
-    <ConfirmationModal showModal={showModal} setShowModal={setShowModal} title={'Transaction succesfull'} description={"Your Item will be available in your inventory in a few minutes."}/>
-    <section className=" hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32 ">
-      <div className="  container mx-auto relative px-4 z-10 flex flex-row px-4 z-10  min-h-[46rem]">
-        <div className=" basis-2/6 transition duration-500 hover:shadow-sm rounded p-5 ">
-          <div className="container  max-h-96	 relative px-4 z-10">
-            <div>
-              <h2 className="text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6 ">
-                Inventory
-              </h2>
-            </div>
-            <div className="grid  grid-cols-3 md: grid grid-cols-2   overflow-y-auto max-h-[36rem]	p-2			">
-              {selectedNFTs.map((NFT, key) => (
-                <NFTWrapper key={key} nft={NFT} index={key}></NFTWrapper>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="  basis-3/6 transition duration-500 hover:shadow-sm rounded p-5">
-          <div className="container flex mx-auto relative pt-6 px-4 mb-4 z-10">
-            <div className="container flex justify-center	">
-              <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold ">
-                {asset.label}
-              </h2>
-            </div>
-            <div className="container flex justify-center	">
-              <img
-                className="transition duration-500 hover:scale-110 relative rounded overflow-hidden m-6 mb-8 w-60 h-75 rounded object-cover"
-                src={asset.src}
-                alt="title" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center mt-4"></div>
-            <div className="text-center mt-4">
+      <CardanoModal showModal={!isCardano} />
+
+      <ConfirmationModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        title={"Transaction succesfull"}
+        description={
+          "Your Item will be available in your inventory in a few minutes."
+        }
+      />
+      <section className=" hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32 ">
+        <div className="  container mx-auto relative px-4 z-10 flex flex-row px-4 z-10  min-h-[46rem]">
+          <div className=" basis-2/6 transition duration-500 hover:shadow-sm rounded p-5 ">
+            <div className="container  max-h-96	 relative px-4 z-10">
               <div>
-                <button onClick={async () => { if(isRecipeComplete){
-                  const hash = await forgeWeapon(
-                    assetsToBurn,
-                    asset
-                  );
-                  if(hash){setShowModal(hash)}}} } className={`flex flex-col items-stretch w-1/2 bg-green-100 transition hover:bg-indigo-100 rounded-lg  mx-auto mb-1 ${isRecipeComplete ? null : "cursor-not-allowed"}`}>
-                  <img  src="/anvil.png" alt="title" />
-                  <div className="font-display text-xl text-blueGray-900 font-bold">
-                    Forge
-                  </div>
-                </button>
+                <h2 className="text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6 ">
+                  Inventory
+                </h2>
+              </div>
+              <div className="grid  grid-cols-3 md: grid grid-cols-2   overflow-y-auto max-h-[36rem]	p-2			">
+                {selectedNFTs.map((NFT, key) => (
+                  <NFTWrapper key={key} nft={NFT} index={key}></NFTWrapper>
+                ))}
               </div>
             </div>
           </div>
-        </div>
-        <div className=" basis-1/6 transition duration-500 hover:shadow-sm rounded p-5">
-          <div className="container mx-auto relative px-4 z-10">
-            <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6">
-              Recipe Ingredients
-            </h2>
-            <div className="grid grid-cols-4 gap-2 ">
-              <div className="thumbnail grid gap-4 items-center grid-cols-2 col-span-7 md:col-span-4  h-200">
-                {asset.recipe.map(function (x, i) {
-                  return Array.from(Array(x).keys()).map((y,w) => (
-                    <div className="flex justify-center	" key={`${y}-img-container`}>
-                      <img
-                        className="transition duration-500 hover:scale-110 relative rounded overflow-hidden m-2  rounded object-cover"
-                        src={assets[i].src}
-                        alt="title"
-                        key={`${y}-img`} />
+          <div className="  basis-3/6 transition duration-500 hover:shadow-sm rounded p-5">
+            <div className="container flex mx-auto relative pt-6 px-4 mb-4 z-10">
+              <div className="container flex justify-center	">
+                <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold ">
+                  {asset.label}
+                </h2>
+              </div>
+              <div className="container flex justify-center	">
+                <img
+                  className="transition duration-500 hover:scale-110 relative rounded overflow-hidden m-6 mb-8 w-60 h-75 rounded object-cover"
+                  src={asset.src}
+                  alt="title"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center mt-4"></div>
+              <div className="text-center mt-4">
+                <div>
+                  <button
+                    onClick={async () => {
+                      if (isRecipeComplete) {
+                        const hash = await forgeWeapon(assetsToBurn, asset);
+                        if (hash) {
+                          setShowModal(hash);
+                        }
+                      }
+                    }}
+                    className={`flex flex-col items-stretch w-1/2 bg-green-100 transition hover:bg-indigo-100 rounded-lg  mx-auto mb-1 ${
+                      isRecipeComplete ? null : "cursor-not-allowed"
+                    }`}
+                  >
+                    <img src="/anvil.png" alt="title" />
+                    <div className="font-display text-xl text-blueGray-900 font-bold">
+                      Forge
                     </div>
-                  ));
-                })}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className=" basis-1/6 transition duration-500 hover:shadow-sm rounded p-5">
+            <div className="container mx-auto relative px-4 z-10">
+              <h2 className=" text-center font-display text-xl lg:text-4xl text-blueGray-900 font-bold mb-6">
+                Recipe Ingredients
+              </h2>
+              <div className="grid grid-cols-4 gap-2 ">
+                <div className="thumbnail grid gap-4 items-center grid-cols-2 col-span-7 md:col-span-4  h-200">
+                  {asset.recipe.map(function (x, i) {
+                    return Array.from(Array(x).keys()).map((y, w) => (
+                      <div
+                        className="flex justify-center	"
+                        key={`${y}-img-container`}
+                      >
+                        <img
+                          className="transition duration-500 hover:scale-110 relative rounded overflow-hidden m-2  rounded object-cover"
+                          src={assets[i].src}
+                          alt="title"
+                          key={`${y}-img`}
+                        />
+                      </div>
+                    ));
+                  })}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section></>
+      </section>
+    </>
   );
 }
 

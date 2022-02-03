@@ -16,11 +16,16 @@ export function HextoAscii(hex) {
 }
 
 export const addressBech32 = async () => {
-  await Loader.load();
-  const address = (await window.cardano.getUsedAddresses())[0];
-  return Loader.Cardano.Address.from_bytes(
-    Buffer.from(address, "hex")
-  ).to_bech32();
+  try {
+    await Loader.load();
+
+    const address = (await window.cardano.getUsedAddresses())[0];
+    return Loader.Cardano.Address.from_bytes(
+      Buffer.from(address, "hex")
+    ).to_bech32();
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 export const getSelfUTXOs = async () => {
@@ -68,4 +73,24 @@ export function getNiceName(nftName) {
   }
 
   return `${getLabel(nftName)} #${nftName.replace(/[^0-9]/g, "")} `;
+}
+
+export async function loadCardano(stateSeter) {
+  try {
+    const cardanoProvider = await window.cardano;
+    if (cardanoProvider) {
+      try {
+        const cardanoProvider_ = await window.cardano.enable();
+        stateSeter(cardanoProvider_);
+      } catch (e) {
+        stateSeter(false);
+        console.log(e);
+      }
+    } else {
+      stateSeter(false);
+      console.log("there is no Cardano provider");
+    }
+  } catch (e) {
+    console.log(e);
+  }
 }

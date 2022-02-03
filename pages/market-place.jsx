@@ -3,13 +3,19 @@ import axios from "axios";
 import { selector } from "../constants/selector";
 import { INFURA } from "../constants/routes";
 import { Footer } from "../Components/footer";
-import { HextoAscii, addressBech32, fromHex } from "../Cardano/Utils";
+import {
+  HextoAscii,
+  addressBech32,
+  fromHex,
+  loadCardano,
+} from "../Cardano/Utils";
 import BuyModal from "../Components/BuyModal";
 import { getNiceName } from "../Cardano/Utils";
 import { marketScriptAdresssBech32 } from "../constants/marketPLaceAddress";
 import { martketData } from "./api/server";
 import CancelModal from "../Components/CancelModal";
 import BuyModal_ from "../Components/BuyModal_";
+import CardanoModal from "../Components/CardanoModal";
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
 function selector_(x, filterOption) {
@@ -56,60 +62,80 @@ export default function MarketPLace({
   const [address, setAddress] = useState(null);
   const [filterOption, setFilterOption] = useState("all");
   const [myAssets, setmyAssets] = useState(false);
+  const [isCardano, setIsCardano] = useState(false);
+
+  useEffect(async () => {
+    await loadCardano(setIsCardano);
+    await loadNFTs();
+  }, []);
 
   useEffect(() => {
     loadNFTs();
-  }, []);
+  }, [isCardano]);
+
+  async function loadCardano() {
+    const cardanoProvider = await window.cardano;
+    if (cardanoProvider) {
+      console.log("there is cardano provider");
+      const enabled = await window.cardano.enable();
+      if (enabled) {
+        setIsCardano(true);
+      }
+    } else console.log("there is not cardano provider");
+  }
 
   async function loadNFTs() {
-    //console.log("loading NFTs")
-    await window.cardano.enable();
-    const address = await addressBech32();
-    setAddress(address);
+    if (isCardano) {
+      //console.log("loading NFTs")
 
-    const marketAddress = marketScriptAdresssBech32;
+      //await window.cardano.enable();
+      const address = await addressBech32();
+      setAddress(address);
 
-    const getAssets = async function () {
-      // This function trows an error 404 if the address has not had any tx...  FIX!!!
-      try {
-        const response = await axios.post(`${server}/api/assetss`, {
-          address: address,
-        });
-        const assets = response.data.amount.map((x) => x.unit);
+      const marketAddress = marketScriptAdresssBech32;
 
-        return assets;
-      } catch (error) {
-        console.log(error.response);
-        return null;
-      }
-    };
-    //console.log(marketAddress);
-    const marketData = await martketData(marketAddress);
-    //console.log(marketData[0]);
-    if (marketData.length == 0) {
-      setLoadingState("loaded");
-    } else {
-      //console.log(marketData);
-      const data2 = await Promise.all(
-        marketData.map(async (x) => {
-          console.log(x.unit);
-          const response = await axios.post(`${server}/api/assetss/info`, {
-            asset: x.unit,
+      const getAssets = async function () {
+        // This function trows an error 404 if the address has not had any tx...  FIX!!!
+        try {
+          const response = await axios.post(`${server}/api/assetss`, {
+            address: address,
           });
-          // console.log( )
-          const aditionalInfo = response.data;
+          const assets = response.data.amount.map((x) => x.unit);
 
-          x.aditionalInfo = aditionalInfo;
-          console.log(marketData);
-          console.log(response.data);
-          return response;
-        })
-      );
+          return assets;
+        } catch (error) {
+          console.log(error.response);
+          return null;
+        }
+      };
+      //console.log(marketAddress);
+      const marketData = await martketData(marketAddress);
+      //console.log(marketData[0]);
+      if (marketData.length == 0) {
+        setLoadingState("loaded");
+      } else {
+        //console.log(marketData);
+        const data2 = await Promise.all(
+          marketData.map(async (x) => {
+            console.log(x.unit);
+            const response = await axios.post(`${server}/api/assetss/info`, {
+              asset: x.unit,
+            });
+            // console.log( )
+            const aditionalInfo = response.data;
 
-      setNFTs(marketData);
-      setSelectedNFTs(filterNFTs_(filterNFTs(NFTs)));
+            x.aditionalInfo = aditionalInfo;
+            console.log(marketData);
+            console.log(response.data);
+            return response;
+          })
+        );
 
-      setLoadingState("loaded");
+        setNFTs(marketData);
+        setSelectedNFTs(filterNFTs_(filterNFTs(NFTs)));
+
+        setLoadingState("loaded");
+      }
     }
   }
 
@@ -284,7 +310,7 @@ export default function MarketPLace({
 
   return (
     <>
-      {" "}
+      <CardanoModal showModal={!isCardano} />
       <BuyModal_ showModal={assetToBuy} setShowModal={setAssetToBuy} />
       <CancelModal showModal={assetToSell} setShowModal={setAssetToSell} />
       <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">
