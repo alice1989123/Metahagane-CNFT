@@ -59,11 +59,16 @@ export async function initTx(protocolParameters) {
 
 export function getNiceName(nftName) {
   function getLabel(nftName_) {
-    const names = assets.map((x) => x.value);
-    const index = names.indexOf(nftName_.split(/[0-9]/)[0]);
-    const label = assets[index].label;
+    try {
+      const names = assets.map((x) => x.value);
+      const index = names.indexOf(nftName_.split(/[0-9]/)[0]);
+      const label = assets[index].label;
 
-    return label;
+      return label;
+    } catch (e) {
+      console.log(e);
+      return " ";
+    }
   }
   function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
