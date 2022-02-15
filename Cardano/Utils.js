@@ -1,8 +1,9 @@
-//@ts-nocheck
+import { materials } from "../constants/assets.js";
 
 import Loader from "./Loader_";
 import { languageViews } from "./LanguageViews.js";
 import { assets } from "../constants/assets";
+import { policysId } from "../constants/policyId";
 
 export function toHex(bytes) {
   return Buffer.from(bytes, "hex").toString("hex");
@@ -99,3 +100,43 @@ export async function loadCardano(stateSeter) {
     console.log(e);
   }
 }
+
+export function isNFTlegit(nft) {
+  try {
+    if (policysId.includes(nft.slice(0, 56))) {
+      return true;
+    }
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+}
+export const isRecipeComplete_ = function (assetsToBurn, asset) {
+  function materialCounter(assetsToBurn, material) {
+    if (assetsToBurn) {
+      console.log(assetsToBurn);
+
+      const filteredAssets = assetsToBurn.filter(
+        (x) =>
+          fromHex(x.asset.slice(56)).toString().replace(/\d+/g, "") ==
+          material.value
+      );
+      return filteredAssets.length;
+    } else {
+      return 0;
+    }
+  }
+
+  const selectedRecipeData = asset.recipe;
+  // const selectedAssetsData = []
+  //console.log(selectedRecipeData);
+  let selectedAssetData = [];
+  materials.forEach((material) => {
+    const count = materialCounter(assetsToBurn, material);
+    selectedAssetData.push(count);
+  });
+  console.log(selectedAssetData, selectedRecipeData);
+  return (
+    JSON.stringify(selectedRecipeData) == JSON.stringify(selectedAssetData)
+  );
+};

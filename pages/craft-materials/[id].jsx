@@ -5,10 +5,11 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { INFURA } from "../../constants/routes";
 import { addressBech32, fromHex, loadCardano } from "../../Cardano/Utils";
-import { materials } from "../../constants/assets.js";
 import { forgeWeapon } from "../api/server";
 import ConfirmationModal from "../../Components/confirmationModal";
 import CardanoModal from "../../Components/CardanoModal.jsx";
+import { isRecipeComplete_, isNFTlegit } from "../../Cardano/Utils";
+import { selector } from "../../constants/selector.js";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
@@ -53,7 +54,8 @@ export default function Craft({ postData }) {
   }, [isCardano]);
 
   useEffect(() => {
-    setIsRecipeComplete(isRecipeComplete_(assetsToBurn));
+    //console.log(asset);
+    setIsRecipeComplete(isRecipeComplete_(assetsToBurn, asset));
     console.log(isRecipeComplete), [assetsToBurn];
   });
 
@@ -78,7 +80,17 @@ export default function Craft({ postData }) {
         return null;
       }
     };
-    const data = await getAssets();
+    let data = await getAssets();
+    data = data.filter(
+      (x) =>
+        !!selector(
+          Buffer.from(x.slice(56, 100), "hex")
+            .toString("utf-8")
+            .replace(/[0-9]/g, "")
+        )
+    );
+
+    data = data.filter((x) => isNFTlegit(x));
     if (!data) {
       setLoadingState("loaded");
     } else {
@@ -92,14 +104,7 @@ export default function Craft({ postData }) {
             })
         )
       );
-      let filteredMetadata_ = data2.filter(
-        (x) =>
-          x.data.onchain_metadata &&
-          x.data.onchain_metadata.description &&
-          ["material-raw", "weapon"].includes(
-            x.data.onchain_metadata.description
-          )
-      );
+      let filteredMetadata_ = data2.filter((x) => true);
       let filteredMetadata = filteredMetadata_.map((x) => x.data);
 
       const assets = data2.map((x) => x.data.asset);
@@ -116,35 +121,6 @@ export default function Craft({ postData }) {
   console.log(postData);
   console.log(asset);
 
-  const isRecipeComplete_ = function (assetsToBurn) {
-    function materialCounter(assetsToBurn, material) {
-      if (assetsToBurn) {
-        console.log(assetsToBurn);
-
-        const filteredAssets = assetsToBurn.filter(
-          (x) =>
-            fromHex(x.asset.slice(56)).toString().replace(/\d+/g, "") ==
-            material.value
-        );
-        return filteredAssets.length;
-      } else {
-        return 0;
-      }
-    }
-
-    const selectedRecipeData = asset.recipe;
-    // const selectedAssetsData = []
-    //console.log(selectedRecipeData);
-    let selectedAssetData = [];
-    materials.forEach((material) => {
-      const count = materialCounter(assetsToBurn, material);
-      selectedAssetData.push(count);
-    });
-    console.log(selectedAssetData, selectedRecipeData);
-    return (
-      JSON.stringify(selectedRecipeData) == JSON.stringify(selectedAssetData)
-    );
-  };
   const NFTWrapper = function ({ nft, index }) {
     const borderWidth = "border-4 md:2 sm:1";
     //console.log(index)
@@ -255,7 +231,8 @@ export default function Craft({ postData }) {
                       }
                     }}
                     className={`flex flex-col items-stretch w-1/2 bg-green-100 transition hover:bg-indigo-100 rounded-lg  mx-auto mb-1 ${
-                      isRecipeComplete ? null : "cursor-not-allowed"
+                      /* 
+                      isRecipeComplete ? null : "cursor-not-allowed" */ "s"
                     }`}
                   >
                     <img src="/anvil.png" alt="title" />

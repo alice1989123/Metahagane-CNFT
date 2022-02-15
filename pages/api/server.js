@@ -129,7 +129,7 @@ export async function martketData(marketaddress) {
       marketaddress: marketaddress,
     });
     const data = response.data;
-    console.log(data);
+    //console.log(data);
     return data;
   } catch (error) {
     console.log(error);

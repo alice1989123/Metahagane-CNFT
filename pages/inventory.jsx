@@ -13,38 +13,9 @@ import BuyModal from "../Components/BuyModal";
 import { getNiceName } from "../Cardano/Utils";
 import ConfirmationModal from "../Components/confirmationModal";
 import CardanoModal from "../Components/CardanoModal";
+import { isNFTlegit } from "../Cardano/Utils";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
-
-function selector_(x, filterOption) {
-  return (
-    selector(fromHex(x.slice(56)).toString().replace(/\d+/g, "")) ==
-    filterOption
-  );
-}
-
-function MaterialSelector(x) {
-  return (
-    selector_(x, "rawMaterial") ||
-    selector_(x, "materialIngot") ||
-    selector_(x, "tool")
-  );
-}
-
-function WeaponsSelector(x) {
-  return (
-    selector_(x, "commonWeapon") ||
-    selector_(x, "uncommonWeapon") ||
-    selector_(x, "rareWeapon") ||
-    selector_(x, "epicWeapon") ||
-    selector_(x, "legendaryWeapon") ||
-    selector_(x, "tool")
-  );
-}
-
-function generalSelector(isInventory) {
-  return isInventory ? WeaponsSelector : MaterialSelector;
-}
 
 export default function Inventory({
   selectedAsset,
@@ -54,80 +25,111 @@ export default function Inventory({
 }) {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [NFTs, setNFTs] = useState([]);
+  const [data_, setData_] = useState([]);
   const [loadingState, setLoadingState] = useState("not-loaded");
   const [assetToSell, setAssetToSell] = useState(null);
   const [isCardano, setIsCardano] = useState(true);
+  const [filterOption, setFilterOption] = useState("all");
 
   useEffect(async () => {
-    await loadCardano(setIsCardano);
-    await loadNFTs();
+    loadCardano(setIsCardano);
   }, []);
 
   useEffect(() => {
-    loadNFTs();
+    fetchNFTs();
   }, [isCardano]);
 
-  async function loadNFTs() {
-    //console.log("loading NFTs")
+  useEffect(() => {
+    loadNFTs();
+  }, [data_]);
 
-    const address = await addressBech32();
+  async function fetchNFTs() {
+    try {
+      await window.cardano.enable();
 
-    const getAssets = async function () {
-      // This function trows an error 404 if the address has not had any tx...  FIX!!!
-      try {
-        const response = await axios.post(`${server}/api/assetss`, {
-          address: address,
-        });
-        const assets = response.data.amount.map((x) => x.unit);
+      const address = await addressBech32();
 
-        return assets;
-      } catch (error) {
-        console.log(error.response);
-        return null;
-      }
-    };
-    const data = await getAssets();
-    if (!data) {
-      setLoadingState("loaded");
-    } else {
-      const data2 = await Promise.all(
-        data.map(
-          async (x) =>
-            await axios.post(`${server}/api/assetss/info`, {
-              asset: x,
-            })
-        )
-      );
-      let filteredMetadata_ = data2.filter(
+      const getAssets = async function () {
+        // This function trows an error 404 if the address has not had any tx...  FIX!!!
+        try {
+          const response = await axios.post(`${server}/api/assetss`, {
+            address: address,
+          });
+          const assets = response.data.amount.map((x) => x.unit);
+
+          return assets;
+        } catch (error) {
+          console.log(error.response);
+          return null;
+        }
+      };
+
+      let data = await getAssets();
+
+      data = data.filter(
         (x) =>
-          x.data.onchain_metadata &&
-          x.data.onchain_metadata.description &&
-          ["material-raw", "weapon"].includes(
-            x.data.onchain_metadata.description
+          !!selector(
+            Buffer.from(x.slice(56, 100), "hex")
+              .toString("utf-8")
+              .replace(/[0-9]/g, "")
           )
       );
-      let filteredMetadata = filteredMetadata_.map((x) => x.data);
 
-      const assets = data2.map((x) => x.data.asset);
+      data = data.filter((x) => isNFTlegit(x));
 
-      console.log(filteredMetadata);
-
-      setNFTs(filteredMetadata);
-      setSelectedNFTs(filteredMetadata);
-
-      setLoadingState("loaded");
+      if (!data) {
+        setLoadingState(false);
+      }
+      setData_(data);
+    } catch (e) {
+      console.log(e);
     }
   }
 
+  async function loadNFTs() {
+    //console.log("loading NFTs");
+
+    let data2 = await Promise.all(
+      data_.map(
+        async (x) =>
+          await axios.post(`${server}/api/assetss/info`, {
+            asset: x,
+          })
+      )
+    );
+
+    data2 = data2.map((x) => x.data);
+
+    setNFTs(data2);
+    setSelectedNFTs(data2);
+
+    setLoadingState(true);
+  }
+
+  //console.log(data_, NFTs);
+
   function filterNFTs(NFTs, filterOption) {
-    return NFTs.filter(
-      (x) =>
+    //console.log(NFTs);
+    if (filterOption == "all") {
+      return NFTs;
+    }
+    return NFTs.filter((x) => {
+      /*   console.log(
         selector(fromHex(x.asset_name).toString().replace(/\d+/g, "")) ==
-          filterOption[0] ||
+          filterOption
+      ); */
+      /*    console.log(
+        selector(fromHex(x.asset_name).toString().replace(/\d+/g, "")) ==
+          filterOption
+      ); */
+      return (
+        selector(fromHex(x.asset_name).toString().replace(/\d+/g, "")) ==
+          filterOption ||
         selector(fromHex(x.asset_name).toString().replace(/\d+/g, ""))
           .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-          .split(" ")[1] == filterOption[0]
-    );
+          .split(" ")[1] == filterOption
+      );
+    });
   }
 
   const NFTWrapper = function ({ nft, setAssetToSell }) {
@@ -153,7 +155,6 @@ export default function Inventory({
           <button
             onClick={() => {
               setAssetToSell(nft);
-              console.log(assetToSell);
             }}
             className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
           >
@@ -255,7 +256,9 @@ export default function Inventory({
 
   return (
     <>
-      <CardanoModal showModal={!isCardano} />
+      {/*       <div>{JSON.stringify(selectedNFTs)}</div>
+       */}{" "}
+      <CardanoModal showModal={!isCardano} />{" "}
       <BuyModal showModal={assetToSell} setShowModal={setAssetToSell} />
       <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">
         <div className="container mx-auto relative px-4 z-10">
@@ -282,7 +285,6 @@ export default function Inventory({
                 className="transition duration-500  hover:text-indigo-500 underline-hover"
                 href="explore.html"
               >
-                {" "}
                 Inventory
               </a>
             </li>
@@ -291,7 +293,7 @@ export default function Inventory({
                 className="w-3 h-3 inline-block mr-2"
                 src="assets/images/right-arrow.svg"
                 alt="title"
-              />{" "}
+              />
               Explore
             </li>
           </ul>
@@ -310,36 +312,50 @@ export default function Inventory({
               </select>
               <div className="hidden lg:flex flex-wrap items-center">
                 <a
-                  onClick={() => setSelectedNFTs(NFTs)}
-                  className="btn inline-block text-white font-body font-bold rounded py-3 px-6 mr-4 mb-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
+                  onClick={() => {
+                    console.log(NFTs);
+                    console.log(filterNFTs(NFTs, "all"));
+                    setSelectedNFTs(filterNFTs(NFTs, "all"));
+                    setFilterOption("all");
+                  }}
+                  className={selectedButton(filterOption, "all")}
                 >
                   All
                 </a>
                 <a
-                  onClick={() =>
-                    setSelectedNFTs(filterNFTs(NFTs, ["rawMaterial"]))
-                  }
-                  className="block border border-blueGray-300 text-blueGray-900 hover:text-white font-body font-bold rounded py-3 px-6 mr-4 mb-4 transition duration-500 hover:bg-indigo-500 hover:border-indigo-500"
+                  onClick={() => {
+                    setSelectedNFTs(filterNFTs(NFTs, "rawMaterial"));
+                    console.log(filterNFTs(NFTs, "rawMaterial"));
+                    setFilterOption("rawMaterial");
+                  }}
+                  className={selectedButton(filterOption, "rawMaterial")}
                 >
                   Raw Materials
                 </a>
                 <a
-                  onClick={() =>
-                    setSelectedNFTs(filterNFTs(NFTs, ["materialIngot"]))
-                  }
-                  className="block border border-blueGray-300 text-blueGray-900 hover:text-white font-body font-bold rounded py-3 px-6 mr-4 mb-4 transition duration-500 hover:bg-indigo-500 hover:border-indigo-500"
+                  onClick={() => {
+                    setSelectedNFTs(filterNFTs(NFTs, "materialIngot"));
+                    setFilterOption("materialIngot");
+                  }}
+                  className={selectedButton(filterOption, "materialIngot")}
                 >
                   Ingots
                 </a>
                 <a
-                  onClick={() => setSelectedNFTs(filterNFTs(NFTs, ["tool"]))}
-                  className="block border border-blueGray-300 text-blueGray-900 hover:text-white font-body font-bold rounded py-3 px-6 mr-4 mb-4 transition duration-500 hover:bg-indigo-500 hover:border-indigo-500"
+                  onClick={() => {
+                    setSelectedNFTs(filterNFTs(NFTs, "tool"));
+                    setFilterOption("tool");
+                  }}
+                  className={selectedButton(filterOption, "tool")}
                 >
                   Tools
                 </a>
                 <a
-                  onClick={() => setSelectedNFTs(filterNFTs(NFTs, ["Weapon"]))}
-                  className="block border border-blueGray-300 text-blueGray-900 hover:text-white font-body font-bold rounded py-3 px-6 mr-4 mb-4 transition duration-500 hover:bg-indigo-500 hover:border-indigo-500"
+                  onClick={() => {
+                    setSelectedNFTs(filterNFTs(NFTs, "Weapon"));
+                    setFilterOption("Weapon");
+                  }}
+                  className={selectedButton(filterOption, "Weapon")}
                 >
                   Weapons
                 </a>
@@ -370,4 +386,17 @@ export default function Inventory({
       <Footer />
     </>
   );
+
+  function selectedButton(selectedOption, selector) {
+    const selected =
+      "btn inline-block text-white font-body font-bold rounded py-3 px-6 mr-4 mb-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100";
+    const notSelected =
+      "block border border-blueGray-300 text-blueGray-900 hover:text-white font-body font-bold rounded py-3 px-6 mr-4 mb-4 transition duration-500 hover:bg-indigo-500 hover:border-indigo-500";
+
+    if (selectedOption == selector) {
+      return selected;
+    } else {
+      return notSelected;
+    }
+  }
 }

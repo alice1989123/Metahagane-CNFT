@@ -16,37 +16,8 @@ import { martketData } from "./api/server";
 import CancelModal from "../Components/CancelModal";
 import BuyModal_ from "../Components/BuyModal_";
 import CardanoModal from "../Components/CardanoModal";
+
 const server = process.env.NEXT_PUBLIC_SERVER_API;
-
-function selector_(x, filterOption) {
-  return (
-    selector(fromHex(x.slice(56)).toString().replace(/\d+/g, "")) ==
-    filterOption
-  );
-}
-
-function MaterialSelector(x) {
-  return (
-    selector_(x, "rawMaterial") ||
-    selector_(x, "materialIngot") ||
-    selector_(x, "tool")
-  );
-}
-
-function WeaponsSelector(x) {
-  return (
-    selector_(x, "commonWeapon") ||
-    selector_(x, "uncommonWeapon") ||
-    selector_(x, "rareWeapon") ||
-    selector_(x, "epicWeapon") ||
-    selector_(x, "legendaryWeapon") ||
-    selector_(x, "tool")
-  );
-}
-
-function generalSelector(isInventory) {
-  return isInventory ? WeaponsSelector : MaterialSelector;
-}
 
 export default function MarketPLace({
   selectedAsset,
@@ -62,7 +33,7 @@ export default function MarketPLace({
   const [address, setAddress] = useState(null);
   const [filterOption, setFilterOption] = useState("all");
   const [myAssets, setmyAssets] = useState(false);
-  const [isCardano, setIsCardano] = useState(false);
+  const [isCardano, setIsCardano] = useState(true);
 
   useEffect(async () => {
     await loadCardano(setIsCardano);
@@ -86,9 +57,6 @@ export default function MarketPLace({
 
   async function loadNFTs() {
     if (isCardano) {
-      //console.log("loading NFTs")
-
-      //await window.cardano.enable();
       const address = await addressBech32();
       setAddress(address);
 
@@ -114,7 +82,7 @@ export default function MarketPLace({
       if (marketData.length == 0) {
         setLoadingState("loaded");
       } else {
-        //console.log(marketData);
+        console.log(marketData);
         const data2 = await Promise.all(
           marketData.map(async (x) => {
             console.log(x.unit);
@@ -125,8 +93,8 @@ export default function MarketPLace({
             const aditionalInfo = response.data;
 
             x.aditionalInfo = aditionalInfo;
-            console.log(marketData);
-            console.log(response.data);
+            //console.log(marketData);
+            //console.log(response.data);
             return response;
           })
         );
@@ -141,18 +109,34 @@ export default function MarketPLace({
 
   function filterNFTs(NFTs_, filterOption_) {
     //filters according to type of NFT
-    if (filterOption == "all") {
+    if (filterOption_ == "all") {
       return NFTs_;
+    } else {
+      return NFTs_.filter((x) => {
+        console.log(
+          selector(
+            Buffer.from(x.unit.slice(56, 100), "hex")
+              .toString("utf-8")
+              .replace(/[0-9]/g, ""),
+            filterOption_
+          )
+        );
+        return (
+          selector(
+            Buffer.from(x.unit.slice(56, 100), "hex")
+              .toString("utf-8")
+              .replace(/[0-9]/g, "")
+          ) == filterOption_ ||
+          selector(
+            Buffer.from(x.unit.slice(56, 100), "hex")
+              .toString("utf-8")
+              .replace(/[0-9]/g, "")
+          )
+            .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+            .split(" ")[1] == filterOption_
+        );
+      });
     }
-    return NFTs_.filter((x) => {
-      return (
-        selector(Buffer.from(x.unit.slice(56, 100), "hex").toString("utf-8")) ==
-          filterOption_ ||
-        selector(Buffer.from(x.unit.slice(56, 100), "hex").toString("utf-8"))
-          .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-          .split(" ")[1] == filterOption_
-      );
-    });
   }
 
   function filterNFTs_(NFTs_, myAssets_) {
@@ -164,135 +148,134 @@ export default function MarketPLace({
 
   function ShowNFTs({ selectedNFTs, myAssets }) {
     const NFTWrapper = function ({ nft, setAssetToSell, myAssets }) {
-      console.log(nft);
       return (
-        <div
-          className="product-box gradient-box flex justify-between flex-col bg-white shadow rounded transition hover:shadow-lg"
-          data-aos="fade-up"
-        >
-          <div className="product-top relative bg-white">
-            <div className="product-image relative rounded overflow-hidden m-6 mb-8">
-              <img
-                className="w-full sm:h-90 rounded object-cover"
-                src={
-                  nft.aditionalInfo.onchain_metadata.image &&
-                  `${INFURA}${nft.aditionalInfo.onchain_metadata.image.replace(
-                    "ipfs://",
-                    "ipfs/"
-                  )}`
-                }
-                alt="title"
-              />
-            </div>
-            <button
-              onClick={() => {
-                myAssets ? setAssetToSell(nft) : setAssetToBuy(nft);
-              }}
-              className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
-            >
-              <img
-                className="w-4 h-4 inline-block mb-1"
-                src="assets/images/bid-icon2.svg"
-                alt="title"
-              />
-              {`${myAssets ? "Cancel Sale" : "Buy Item"}`}{" "}
-            </button>
-            <div className="product-content px-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <a
-                    href="creator-published.html"
-                    className="relative"
-                    data-tooltip="Steven Robart"
-                  >
-                    <img
-                      className="border-2 border-white w-10 h-10 object-cover rounded-lg"
-                      src="assets/images/author/1.jpg"
-                      alt="title"
-                    />
-                  </a>
-                  <a
-                    href="creator-published.html"
-                    className="relative -left-2"
-                    data-tooltip="Steven Robart"
-                  >
-                    <img
-                      className="border-2 border-white w-10 h-10 object-cover rounded-lg"
-                      src="assets/images/author/3.jpg"
-                      alt="title"
-                    />
-                  </a>
-                  <a
-                    href="creator-published.html"
-                    className="relative -left-4"
-                    data-tooltip="Steven Robart"
-                  >
-                    <img
-                      className="border-2 border-white w-10 h-10 object-cover rounded-lg"
-                      src="assets/images/author/3.jpg"
-                      alt="title"
-                    />{" "}
-                    <span className="absolute bottom-0 right-1">
+        <>
+          {/*  <div>{JSON.stringify(nft)}</div> */}
+          <div
+            className="product-box gradient-box flex justify-between flex-col bg-white shadow rounded transition hover:shadow-lg"
+            data-aos="fade-up"
+          >
+            <div className="product-top relative bg-white">
+              <div className="product-image relative rounded overflow-hidden m-6 mb-8">
+                <img
+                  className="w-full sm:h-90 rounded object-cover"
+                  src={
+                    nft.aditionalInfo.onchain_metadata.image &&
+                    `${INFURA}${nft.aditionalInfo.onchain_metadata.image.replace(
+                      "ipfs://",
+                      "ipfs/"
+                    )}`
+                  }
+                  alt="title"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  myAssets ? setAssetToSell(nft) : setAssetToBuy(nft);
+                }}
+                className="product-meta absolute left-0 right-0 m-auto bottom-24 w-36 block text-white text-center font-body font-medium rounded py-2 px-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
+              >
+                <img
+                  className="w-4 h-4 inline-block mb-1"
+                  src="assets/images/bid-icon2.svg"
+                  alt="title"
+                />
+                {`${myAssets ? "Cancel Sale" : "Buy Item"}`}{" "}
+              </button>
+              <div className="product-content px-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <a
+                      href="creator-published.html"
+                      className="relative"
+                      data-tooltip="Steven Robart"
+                    >
                       <img
-                        className="w-3 h-3"
-                        src="assets/images/verified-icon.svg"
+                        className="border-2 border-white w-10 h-10 object-cover rounded-lg"
+                        src="assets/images/author/1.jpg"
                         alt="title"
                       />
+                    </a>
+                    <a
+                      href="creator-published.html"
+                      className="relative -left-2"
+                      data-tooltip="Steven Robart"
+                    >
+                      <img
+                        className="border-2 border-white w-10 h-10 object-cover rounded-lg"
+                        src="assets/images/author/3.jpg"
+                        alt="title"
+                      />
+                    </a>
+                    <a
+                      href="creator-published.html"
+                      className="relative -left-4"
+                      data-tooltip="Steven Robart"
+                    >
+                      <img
+                        className="border-2 border-white w-10 h-10 object-cover rounded-lg"
+                        src="assets/images/author/3.jpg"
+                        alt="title"
+                      />{" "}
+                      <span className="absolute bottom-0 right-1">
+                        <img
+                          className="w-3 h-3"
+                          src="assets/images/verified-icon.svg"
+                          alt="title"
+                        />
+                      </span>
+                    </a>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="bg-indigo-100 flex items-center justify-center rounded-lg w-8 h-8">
+                      <img src="assets/images/heart-icon2.svg" alt="title" />
                     </span>
+                    <p className="font-body font-bold text-sm text-blueGray-600 ml-2">
+                      90 Likes
+                    </p>
+                  </div>
+                </div>
+                <h3 className="text-center font-display text-xl text-blueGray-900 font-bold transition hover:text-indigo-500">
+                  <a href="item-single.html">
+                    {" "}
+                    {getNiceName(
+                      HextoAscii(nft.aditionalInfo.asset_name).split(/[0-9]/)[0]
+                    )}
+                    {!Buffer.from(nft.aditionalInfo.asset_name, "hex")
+                      .toString("utf-8")
+                      .match(/\d/g)
+                      ? null
+                      : ` #${Buffer.from(nft.aditionalInfo.asset_name, "hex")
+                          .toString("utf-8")
+                          .match(/\d/g)
+                          .join("")}`}
                   </a>
-                </div>
-                <div className="flex items-center">
-                  <span className="bg-indigo-100 flex items-center justify-center rounded-lg w-8 h-8">
-                    <img src="assets/images/heart-icon2.svg" alt="title" />
-                  </span>
-                  <p className="font-body font-bold text-sm text-blueGray-600 ml-2">
-                    90 Likes
-                  </p>
-                </div>
+                </h3>
               </div>
-              <h3 className="text-center font-display text-xl text-blueGray-900 font-bold transition hover:text-indigo-500">
-                <a href="item-single.html">
-                  {" "}
-                  {getNiceName(
-                    HextoAscii(nft.aditionalInfo.asset_name).split(/[0-9]/)[0]
-                  )}
-                  {!Buffer.from(nft.aditionalInfo.asset_name, "hex")
-                    .toString("utf-8")
-                    .match(/\d/g)
-                    ? null
-                    : ` #${Buffer.from(nft.aditionalInfo.asset_name, "hex")
-                        .toString("utf-8")
-                        .match(/\d/g)
-                        .join("")}`}
-                </a>
-              </h3>
+            </div>
+            <div className="product-bottom bg-white flex items-center flex-wrap justify-between pt-4 px-6 pb-6">
+              <div>
+                <p className="font-body text-sm text-blueGray-600">Price</p>
+              </div>
+              <div className="text-center">
+                <p className="flex items-center font-body font-bold text-blueGray-900 my-1">
+                  <img
+                    className="w-5 h-5 inline-block mr-1"
+                    src="assets/images/Cardano.png"
+                    alt="title"
+                  />{" "}
+                  {nft.price.price} ADA
+                </p>
+                <p className="font-body text-sm text-blueGray-600">≈$26.69</p>
+              </div>
             </div>
           </div>
-          <div className="product-bottom bg-white flex items-center flex-wrap justify-between pt-4 px-6 pb-6">
-            <div>
-              <p className="font-body text-sm text-blueGray-600">Price</p>
-            </div>
-            <div className="text-center">
-              <p className="flex items-center font-body font-bold text-blueGray-900 my-1">
-                <img
-                  className="w-5 h-5 inline-block mr-1"
-                  src="assets/images/Cardano.png"
-                  alt="title"
-                />{" "}
-                {nft.price.price} ADA
-              </p>
-              <p className="font-body text-sm text-blueGray-600">≈$26.69</p>
-            </div>
-          </div>
-        </div>
+        </>
       );
     };
 
     return (
       <>
-        {" "}
-        {/*         <CancelModal showModal={true} setShowModal={setAssetToSell} />
-         */}{" "}
         <div className="product-infinite grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {selectedNFTs.map((NFT, i) => (
             <NFTWrapper
@@ -310,6 +293,8 @@ export default function MarketPLace({
 
   return (
     <>
+      {" "}
+      {/* <div>{JSON.stringify(NFTs)}</div> */}
       <CardanoModal showModal={!isCardano} />
       <BuyModal_ showModal={assetToBuy} setShowModal={setAssetToBuy} />
       <CancelModal showModal={assetToSell} setShowModal={setAssetToSell} />
@@ -393,6 +378,8 @@ export default function MarketPLace({
                 <a
                   onClick={() => {
                     setFilterOption("all");
+                    console.log(filterNFTs_(NFTs, myAssets));
+                    console.log(filterNFTs(filterNFTs_(NFTs, myAssets), "all"));
                     setSelectedNFTs(
                       filterNFTs(filterNFTs_(NFTs, myAssets), "all")
                     );
