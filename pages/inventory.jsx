@@ -27,7 +27,7 @@ export default function Inventory({
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [NFTs, setNFTs] = useState([]);
   const [data_, setData_] = useState([]);
-  const [loadingState, setLoadingState] = useState("not-loaded");
+  const [loadingState, setLoadingState] = useState(false);
   const [assetToSell, setAssetToSell] = useState(null);
   const [isCardano, setIsCardano] = useState(true);
   const [filterOption, setFilterOption] = useState("all");
@@ -41,45 +41,15 @@ export default function Inventory({
   }, [isCardano]);
 
   useEffect(() => {
-    loadNFTs(6);
+    loadNFTs(20);
   }, [data_]);
 
   useEffect(() => setSelectedNFTs(filterNFTs(NFTs, filterOption)), [NFTs]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
-    //return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  function handleScroll() {
-    console.log(
-      window.innerHeight + document.documentElement.scrollTop,
-      document.documentElement.offsetHeight
-    );
-    console.log(
-      window.scrollY +
-        document.querySelector("#infiniteScroll").getBoundingClientRect().top // Y
-    );
-
-    console.log(
-      window.innerHeight + document.documentElement.scrollTop >=
-        window.scrollY +
-          document.querySelector("#infiniteScroll").getBoundingClientRect().top
-    );
-
-    if (
-      window.innerHeight + document.documentElement.scrollTop >=
-        window.scrollY +
-          document.querySelector("#infiniteScroll").getBoundingClientRect()
-            .top &&
-      NFTs.length <= data.length
-    ) {
-      loadNFTs(6);
-      console.log("Fetch more list items!");
-      console.log(NFTs.length);
-    }
-    return;
-  }
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [data_, NFTs, loadingState]);
 
   async function fetchNFTs() {
     try {
@@ -126,7 +96,10 @@ export default function Inventory({
 
   async function loadNFTs(n) {
     //console.log("loading NFTs");
+    setLoadingState(true);
 
+    console.log(data_);
+    console.log(data_.slice(NFTs.length, NFTs.length + n));
     let data2 = await Promise.all(
       data_.slice(NFTs.length, NFTs.length + n).map(
         async (x) =>
@@ -141,10 +114,10 @@ export default function Inventory({
     console.log(NFTs, data2);
 
     setNFTs([...NFTs, ...data2]);
+    //setSelectedNFTs(NFTs);
     console.log(filterOption);
     console.log((NFTs, filterOption));
-
-    setLoadingState(true);
+    setLoadingState(false);
   }
 
   //console.log(data_, NFTs);
@@ -171,6 +144,52 @@ export default function Inventory({
           .split(" ")[1] == filterOption
       );
     });
+  }
+
+  async function handleScroll() {
+    /* console.log(
+      window.innerHeight + document.documentElement.scrollTop,
+      document.documentElement.offsetHeight
+    );
+    console.log(
+      window.scrollY +
+        document.querySelector("#infiniteScroll").getBoundingClientRect().top // Y
+    );
+    */
+    /* 
+    console.log(
+      window.innerHeight + document.documentElement.scrollTop,
+      document.documentElement.offsetHeight,
+      document.querySelector("#infiniteScroll").getBoundingClientRect().top -
+        window.innerHeight
+    ); */
+
+    //console.log(data_);
+    /* if (
+      document.querySelector("#infiniteScroll").getBoundingClientRect().top -
+        window.innerHeight <
+        0 &&
+      loadingState == true
+    ) {
+      console.log("hey");
+      setLoadingState(false);
+    } */
+
+    if (
+      document.querySelector("#infiniteScroll").getBoundingClientRect().top -
+        window.innerHeight >=
+        0 ||
+      data_.length == NFTs.length ||
+      loadingState == true
+    )
+      return;
+
+    {
+      await loadNFTs(20);
+      console.log("Fetch more list items!");
+      console.log(data_.length, NFTs.length);
+    }
+    return;
   }
 
   const NFTWrapper = function ({ nft, setAssetToSell }) {
@@ -297,8 +316,6 @@ export default function Inventory({
 
   return (
     <>
-      <div>{JSON.stringify(selectedNFTs)}</div>
-      <div>{JSON.stringify(NFTs)}</div>
       <CardanoModal showModal={!isCardano} />{" "}
       <BuyModal showModal={assetToSell} setShowModal={setAssetToSell} />
       <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">
@@ -306,6 +323,9 @@ export default function Inventory({
           <h2 className="font-display text-4xl lg:text-6xl text-blueGray-900 font-bold mb-4">
             Inventory
           </h2>
+          {/*  <div>{JSON.stringify(data_.length)}</div>
+          <div>{JSON.stringify(selectedNFTs.length)}</div>
+          <div>{JSON.stringify(NFTs.length)}</div> */}
           <ul className="hero-breadcrumb font-body text-blueGray-600 flex flex-wrap items-center">
             <li className="flex items-center mr-2">
               <a
@@ -415,7 +435,11 @@ export default function Inventory({
           <div className="flex justify-center mt-8 lg:mt-14">
             <button
               id="infiniteScroll"
-              className="btn load-more-btn flex items-center text-white font-body font-bold rounded px-6 py-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
+              className={
+                data_.length == NFTs.length
+                  ? "	invisible"
+                  : "btn load-more-btn flex items-center text-white font-body font-bold rounded px-6 py-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
+              }
             >
               Load More{" "}
               <img
