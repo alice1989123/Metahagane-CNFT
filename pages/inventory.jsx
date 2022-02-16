@@ -14,6 +14,7 @@ import { getNiceName } from "../Cardano/Utils";
 import ConfirmationModal from "../Components/confirmationModal";
 import CardanoModal from "../Components/CardanoModal";
 import { isNFTlegit } from "../Cardano/Utils";
+import { data } from "autoprefixer";
 
 const server = process.env.NEXT_PUBLIC_SERVER_API;
 
@@ -40,8 +41,45 @@ export default function Inventory({
   }, [isCardano]);
 
   useEffect(() => {
-    loadNFTs();
+    loadNFTs(6);
   }, [data_]);
+
+  useEffect(() => setSelectedNFTs(filterNFTs(NFTs, filterOption)), [NFTs]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    //return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  function handleScroll() {
+    console.log(
+      window.innerHeight + document.documentElement.scrollTop,
+      document.documentElement.offsetHeight
+    );
+    console.log(
+      window.scrollY +
+        document.querySelector("#infiniteScroll").getBoundingClientRect().top // Y
+    );
+
+    console.log(
+      window.innerHeight + document.documentElement.scrollTop >=
+        window.scrollY +
+          document.querySelector("#infiniteScroll").getBoundingClientRect().top
+    );
+
+    if (
+      window.innerHeight + document.documentElement.scrollTop >=
+        window.scrollY +
+          document.querySelector("#infiniteScroll").getBoundingClientRect()
+            .top &&
+      NFTs.length <= data.length
+    ) {
+      loadNFTs(6);
+      console.log("Fetch more list items!");
+      console.log(NFTs.length);
+    }
+    return;
+  }
 
   async function fetchNFTs() {
     try {
@@ -86,11 +124,11 @@ export default function Inventory({
     }
   }
 
-  async function loadNFTs() {
+  async function loadNFTs(n) {
     //console.log("loading NFTs");
 
     let data2 = await Promise.all(
-      data_.map(
+      data_.slice(NFTs.length, NFTs.length + n).map(
         async (x) =>
           await axios.post(`${server}/api/assetss/info`, {
             asset: x,
@@ -100,8 +138,11 @@ export default function Inventory({
 
     data2 = data2.map((x) => x.data);
 
-    setNFTs(data2);
-    setSelectedNFTs(data2);
+    console.log(NFTs, data2);
+
+    setNFTs([...NFTs, ...data2]);
+    console.log(filterOption);
+    console.log((NFTs, filterOption));
 
     setLoadingState(true);
   }
@@ -256,8 +297,8 @@ export default function Inventory({
 
   return (
     <>
-      {/*       <div>{JSON.stringify(selectedNFTs)}</div>
-       */}{" "}
+      <div>{JSON.stringify(selectedNFTs)}</div>
+      <div>{JSON.stringify(NFTs)}</div>
       <CardanoModal showModal={!isCardano} />{" "}
       <BuyModal showModal={assetToSell} setShowModal={setAssetToSell} />
       <section className="hero-section relative mt-2 pt-32 pb-20 lg:pt-48 lg:pb-32">
@@ -372,7 +413,10 @@ export default function Inventory({
             ))}
           </div>
           <div className="flex justify-center mt-8 lg:mt-14">
-            <button className="btn load-more-btn flex items-center text-white font-body font-bold rounded px-6 py-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100">
+            <button
+              id="infiniteScroll"
+              className="btn load-more-btn flex items-center text-white font-body font-bold rounded px-6 py-4 transition-all duration-500 bg-gradient-to-tl from-indigo-500 via-purple-500 to-indigo-500 bg-size-200 bg-pos-0 hover:bg-pos-100"
+            >
               Load More{" "}
               <img
                 className="w-4 h-4 flex-shrink-0 animate-spin ml-2"
