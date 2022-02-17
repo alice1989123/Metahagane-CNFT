@@ -98,8 +98,6 @@ export default function Inventory({
     //console.log("loading NFTs");
     setLoadingState(true);
 
-    console.log(data_);
-    console.log(data_.slice(NFTs.length, NFTs.length + n));
     let data2 = await Promise.all(
       data_.slice(NFTs.length, NFTs.length + n).map(
         async (x) =>
@@ -111,16 +109,10 @@ export default function Inventory({
 
     data2 = data2.map((x) => x.data);
 
-    console.log(NFTs, data2);
-
     setNFTs([...NFTs, ...data2]);
     //setSelectedNFTs(NFTs);
-    console.log(filterOption);
-    console.log((NFTs, filterOption));
     setLoadingState(false);
   }
-
-  //console.log(data_, NFTs);
 
   function filterNFTs(NFTs, filterOption) {
     //console.log(NFTs);
@@ -128,14 +120,6 @@ export default function Inventory({
       return NFTs;
     }
     return NFTs.filter((x) => {
-      /*   console.log(
-        selector(fromHex(x.asset_name).toString().replace(/\d+/g, "")) ==
-          filterOption
-      ); */
-      /*    console.log(
-        selector(fromHex(x.asset_name).toString().replace(/\d+/g, "")) ==
-          filterOption
-      ); */
       return (
         selector(fromHex(x.asset_name).toString().replace(/\d+/g, "")) ==
           filterOption ||
@@ -147,34 +131,6 @@ export default function Inventory({
   }
 
   async function handleScroll() {
-    /* console.log(
-      window.innerHeight + document.documentElement.scrollTop,
-      document.documentElement.offsetHeight
-    );
-    console.log(
-      window.scrollY +
-        document.querySelector("#infiniteScroll").getBoundingClientRect().top // Y
-    );
-    */
-    /* 
-    console.log(
-      window.innerHeight + document.documentElement.scrollTop,
-      document.documentElement.offsetHeight,
-      document.querySelector("#infiniteScroll").getBoundingClientRect().top -
-        window.innerHeight
-    ); */
-
-    //console.log(data_);
-    /* if (
-      document.querySelector("#infiniteScroll").getBoundingClientRect().top -
-        window.innerHeight <
-        0 &&
-      loadingState == true
-    ) {
-      console.log("hey");
-      setLoadingState(false);
-    } */
-
     if (
       document.querySelector("#infiniteScroll").getBoundingClientRect().top -
         window.innerHeight >=
@@ -186,8 +142,6 @@ export default function Inventory({
 
     {
       await loadNFTs(20);
-      console.log("Fetch more list items!");
-      console.log(data_.length, NFTs.length);
     }
     return;
   }
@@ -374,8 +328,8 @@ export default function Inventory({
               <div className="hidden lg:flex flex-wrap items-center">
                 <a
                   onClick={() => {
-                    console.log(NFTs);
-                    console.log(filterNFTs(NFTs, "all"));
+                    //console.log(NFTs);
+                    //console.log(filterNFTs(NFTs, "all"));
                     setSelectedNFTs(filterNFTs(NFTs, "all"));
                     setFilterOption("all");
                   }}
@@ -386,7 +340,7 @@ export default function Inventory({
                 <a
                   onClick={() => {
                     setSelectedNFTs(filterNFTs(NFTs, "rawMaterial"));
-                    console.log(filterNFTs(NFTs, "rawMaterial"));
+                    //console.log(filterNFTs(NFTs, "rawMaterial"));
                     setFilterOption("rawMaterial");
                   }}
                   className={selectedButton(filterOption, "rawMaterial")}

@@ -33,7 +33,7 @@ export default function CardanoModal({ showModal, setShowModal, address }) {
                   <button
                     onClick={async () => {
                       const isCardano = await window.cardano;
-                      console.log(isCardano);
+                      //console.log(isCardano);
                       if (isCardano) {
                         await window.cardano.enable();
                       } else {
@@ -76,8 +76,8 @@ const HookForm = ({ showModal, setShowModal, address, setShowModal_ }) => {
         unit: showModal.asset,
         quantity: showModal.quantity,
       };
-      console.log(showModal);
-      console.log(price.price);
+      //console.log(showModal);
+      //console.log(price.price);
 
       const hash = await sell(sellingData, price.price * 1000000);
       if (hash) {
