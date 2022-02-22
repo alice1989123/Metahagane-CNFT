@@ -176,8 +176,8 @@ export default function Craft({ postData }) {
 
   return (
     <>
-      <CardanoModal showModal={!isCardano} />
-
+      {/*       <CardanoModal showModal={!isCardano} />
+       */}
       <ConfirmationModal
         showModal={showModal}
         setShowModal={setShowModal}
