@@ -106,6 +106,10 @@ export default function Craft({ postData }) {
       );
       let filteredMetadata_ = data2.filter((x) => true);
       let filteredMetadata = filteredMetadata_.map((x) => x.data);
+      console.log(filteredMetadata);
+      /* filteredMetadata = filteredMetadata_.filter(
+        (x) => x.onchain_metadata == !undefined
+      ); */
 
       const assets = data2.map((x) => x.data.asset);
 
